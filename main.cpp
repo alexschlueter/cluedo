@@ -6,6 +6,7 @@
 #include <tuple>
 #include <sstream>
 #include <stdio.h>
+#include <algorithm>
 
 using std::cout;
 using std::cin;
@@ -26,25 +27,23 @@ std::ostream& print_tuple(std::ostream& out, const Tuple& t, int_<1> ) {
 
 template <class... Args>
 std::ostream& operator<<(std::ostream& out, const std::tuple<Args...>& t) {
-    out << '('; 
-    print_tuple(out, t, int_<sizeof...(Args)>()); 
+    out << '(';
+    print_tuple(out, t, int_<sizeof...(Args)>());
     return out << ')';
 }
 
 typedef std::tuple<int, int> Koord;
 
-bool willNichtBleiben()
+std::vector<std::string> charPZuStrVec(const char** ar, int len)
 {
-    char c;
-    do
+    std::vector<std::string> res(len);
+    for (int i = 0; i < len; ++i)
     {
-        cout << "Du wurdest von einem anderen Spieler teleportiert! Möchtest du in diesem Raum fragen? [j/n]";
-        c = getchar();
+        res[i] = ar[i];
     }
-    while (c != 'j' && c != 'n');
-
-    return c == 'n'; // will nicht bleiben
+    return res;
 }
+
 
 int frageZahl(int max)
 {
@@ -69,31 +68,126 @@ int frageOptionen(std::vector<std::string> optionen)
     return frageZahl(optionen.size());
 }
 
-enum class Raum
+class Raum
 {
-    Schlaf, Bade, Arbeits, Küche, Speise, Wohn, Hof, Garage, Spiele, Mitte
+public:
+    enum class RaumT
+    {
+        Schlaf, Bade, Arbeits, Küche, Speise, Wohn, Hof, Garage, Spiele, Mitte
+    } typ;
+    static const int anzahl = 10;
+    static const char* strings[];
+    static const char* artikel[];
+    static const char* instr[];
+    static const char* akkus[];
+
+    static RaumT vonZahl(int z) { return static_cast<RaumT>(z); }
+
+    Raum() : typ(RaumT::Mitte) {};
+    Raum(RaumT r) : typ(r) {};
+    Raum(int z) : typ(vonZahl(z)) {};
+    Raum(char c)
+    {
+        switch (c)
+        {
+        case 'a':
+            typ = RaumT::Schlaf; break;
+        case 'b':
+            typ = RaumT::Bade; break;
+        case 'c':
+            typ = RaumT::Arbeits; break;
+        case 'd':
+            typ = RaumT::Küche; break;
+        case 'e':
+            typ = RaumT::Spiele; break;
+        case 'f':
+            typ = RaumT::Speise; break;
+        case 'g':
+            typ = RaumT::Mitte; break;
+        case 'h':
+            typ = RaumT::Garage; break;
+        case 'i':
+            typ = RaumT::Wohn; break;
+        case 'j':
+            typ = RaumT::Hof; break;
+        }
+    }
+    int zuZahl() const { return static_cast<int>(typ); }
+    std::string zuStr() const { return strings[zuZahl()]; }
+    std::string vollStr() const { return std::string(artikel[zuZahl()]) + " " + zuStr(); }
+    std::string inStr() const { return std::string(instr[zuZahl()]) + " " + zuStr(); }
+    std::string akkusStr() const { return std::string(akkus[zuZahl()]) + " " + zuStr(); }
+
+    bool operator==(const Raum& a) const { return typ == a.typ; }
 };
 
-enum class Charakter
+const char* Raum::strings[] = {"Schlafzimmer", "Badezimmer", "Arbeitszimmer",
+                               "Küche", "Speisezimmer", "Wohnzimmer", "Hof",
+                               "Garage", "Spieleraum", "Mitte"};
+const char* Raum::artikel[] = {"das", "das", "das", "die", "das", "das", "der",
+                               "die", "der", "die"};
+const char* Raum::instr[] = {"im", "im", "im", "in der", "im", "im", "im",
+                             "in der", "im", "in der"};
+const char* Raum::akkus[] = {"das", "das", "das", "die", "das", "das", "den",
+                             "die", "den", "die"};
+
+class Charakter
 {
-    Gloria, Gatow, Porz, Grün, Weiß, Bloom
+public:
+    enum class CharT
+    {
+        Gloria, Gatow, Porz, Grün, Weiß, Bloom
+    } typ;
+    static const int anzahl = 6;
+    static const char* strings[];
+
+    static CharT vonZahl(int z) { return static_cast<CharT>(z); }
+
+    Charakter() : typ(CharT::Gloria) {};
+    Charakter(CharT c) : typ(c) {};
+    Charakter(int z) : typ(vonZahl(z)) {};
+    int zuZahl() const { return static_cast<int>(typ); }
+    std::string zuStr() const { return strings[zuZahl()]; }
+
+    bool operator==(const Charakter& a) const { return typ == a.typ; }
 };
 
-enum class Waffe
+const char* Charakter::strings[] = {"Gloria", "Gatow", "Porz", "Grün", "Weiß", "Bloom"};
+
+class Waffe
 {
-    Rohrzange, Dolch, Heizungsrohr, Leuchter, Pistole, Seil
+public:
+    enum class WafT
+    {
+        Rohrzange, Dolch, Heizungsrohr, Leuchter, Pistole, Seil
+    } typ;
+    static const int anzahl = 6;
+    static const char* strings[];
+    static const char* artikel[];
+    static const char* dativ[];
+
+    static WafT vonZahl(int z) { return static_cast<WafT>(z); }
+
+    Waffe() : typ(WafT::Rohrzange) {};
+    Waffe(WafT w) : typ(w) {};
+    Waffe(int z) : typ(vonZahl(z)) {};
+    int zuZahl() const { return static_cast<int>(typ); }
+    std::string zuStr() const { return strings[zuZahl()]; }
+    std::string mitStr() const { return std::string(dativ[zuZahl()]) + " " + zuStr(); }
+
+    bool operator==(const Waffe& a) const { return typ == a.typ; }
 };
 
-enum class Richtung
-{
-    Oben, Unten, Rechts, Links
-};
+const char* Waffe::strings[] = {"Rohrzange", "Dolch", "Heizungsrohr", "Leuchter",
+                                "Pistole", "Seil"};
+const char* Waffe::artikel[] = {"die", "der", "das", "der", "die", "das"};
+const char* Waffe::dativ[] = {"der", "dem", "dem", "dem", "der", "dem"};
 
 struct Karte
 {
     enum class KartenTyp
     {
-        CharT, RaumT, WaffeT
+        CharK, RaumK, WaffeK
     } typ;
 
     union
@@ -103,18 +197,18 @@ struct Karte
         Waffe waffe;
     };
 
-    Karte() : typ(KartenTyp::CharT), charakter(Charakter::Gloria) {};
-    Karte(Raum r) : typ(KartenTyp::RaumT), raum(r) {};
-    Karte(Charakter c) : typ(KartenTyp::CharT), charakter(c) {};
-    Karte(Waffe w) : typ(KartenTyp::WaffeT), waffe(w) {};
+    Karte() : typ(KartenTyp::CharK), charakter() {};
+    Karte(Raum r) : typ(KartenTyp::RaumK), raum(r) {};
+    Karte(Charakter c) : typ(KartenTyp::CharK), charakter(c) {};
+    Karte(Waffe w) : typ(KartenTyp::WaffeK), waffe(w) {};
     Karte(const Karte& andere)
     {
         typ = andere.typ;
-        if (typ == KartenTyp::CharT)
+        if (typ == KartenTyp::CharK)
         {
             charakter = andere.charakter;
         }
-        else if (typ == KartenTyp::RaumT)
+        else if (typ == KartenTyp::RaumK)
         {
             raum = andere.raum;
         }
@@ -123,70 +217,28 @@ struct Karte
             waffe = andere.waffe;
         }
     }
+
+    bool operator==(const Karte& a) const
+    {
+        if (typ != a.typ) return false;
+        return (typ == KartenTyp::CharK && charakter == a.charakter)
+            || (typ == KartenTyp::RaumK && raum == a.raum)
+            || (typ == KartenTyp::WaffeK && waffe == a.waffe);
+    }
 };
 
 std::ostream& operator<<(std::ostream& os, const Karte &karte)
 {
     switch (karte.typ)
     {
-    case Karte::KartenTyp::CharT:
-        switch (karte.charakter)
-        {
-        case Charakter::Gloria:
-            os << "Gloria"; break;
-        case Charakter::Gatow:
-            os << "Gatow"; break;
-        case Charakter::Porz:
-            os << "Porz"; break;
-        case Charakter::Grün:
-            os << "Grün"; break;
-        case Charakter::Weiß:
-            os << "Weiß"; break;
-        case Charakter::Bloom:
-            os << "Bloom"; break;
-        }
+    case Karte::KartenTyp::CharK:
+        os << karte.charakter.zuStr();
         break;
-    case Karte::KartenTyp::RaumT:
-        switch(karte.raum)
-        {
-        case Raum::Schlaf:
-            cout << "Schlafzimmer"; break;
-        case Raum::Bade:
-            cout << "Badezimmer"; break;
-        case Raum::Arbeits:
-            cout << "Arbeitszimmer"; break;
-        case Raum::Küche:
-            cout << "Küche"; break;
-        case Raum::Speise:
-            cout << "Speisezimmer"; break;
-        case Raum::Wohn:
-            cout << "Wohnzimmer"; break;
-        case Raum::Hof:
-            cout << "Hof"; break;
-        case Raum::Garage:
-            cout << "Garage"; break;
-        case Raum::Spiele:
-            cout << "Spieleraum"; break;
-        case Raum::Mitte:
-            cout << "Mitte"; break;
-        }
+    case Karte::KartenTyp::RaumK:
+        os << karte.raum.zuStr();
         break;
-    case Karte::KartenTyp::WaffeT:
-        switch (karte.waffe)
-        {
-        case Waffe::Rohrzange:
-            os << "Rohrzange"; break;
-        case Waffe::Dolch:
-            os << "Dolch"; break;
-        case Waffe::Heizungsrohr:
-            os << "Heizungsrohr"; break;
-        case Waffe::Leuchter:
-            os << "Leuchter"; break;
-        case Waffe::Pistole:
-            os << "Pistole"; break;
-        case Waffe::Seil:
-            os << "Seil"; break;
-        }
+    case Karte::KartenTyp::WaffeK:
+        os << karte.waffe.zuStr();
     }
     return os;
 }
@@ -206,13 +258,13 @@ struct Position
     enum class PosTyp
     {
         Feld, Raum
-    } typ{PosTyp::Raum};
+    } typ;
 
 
     union
     {
         Koord feld;
-        Raum raum{Raum::Mitte};
+        Raum raum;
     };
 
     void geheNach(int richtung)
@@ -230,34 +282,10 @@ struct Position
         }
     }
 
-    static Raum charZuRaum(char c)
-    {
-        switch (c)
-        {
-        case 'a':
-            return Raum::Schlaf;
-        case 'b':
-            return Raum::Bade;
-        case 'c':
-            return Raum::Arbeits;
-        case 'd':
-            return Raum::Küche;
-        case 'e':
-            return Raum::Spiele;
-        case 'f':
-            return Raum::Speise;
-        case 'g':
-            return Raum::Mitte;
-        case 'h':
-            return Raum::Garage;
-        case 'i':
-            return Raum::Wohn;
-        case 'j':
-            return Raum::Hof;
-        }
-    }
 
-    Position() {};
+    Position() : typ(PosTyp::Raum), raum() {};
+    Position(Raum r) : typ(PosTyp::Raum), raum(r) {};
+    Position(Koord f) : typ(PosTyp::Feld), feld(f) {};
     Position(const Position& andere)
     {
         typ = andere.typ;
@@ -293,6 +321,19 @@ struct Position
     }
 };
 
+bool willNichtBleiben(Raum r)
+{
+    char c;
+    do
+    {
+        cout << "Du wurdest von einem anderen Spieler in " << r.akkusStr() << " teleportiert! Möchtest du in diesem Raum fragen? [j/n]";
+        c = getchar();
+    }
+    while (c != 'j' && c != 'n');
+
+    return c == 'n'; // will nicht bleiben
+}
+
 int main()
 {
     std::random_device rd;
@@ -316,19 +357,19 @@ int main()
     {
         cout << i << ".\t";
         getline(cin, input);
-        if (input == "Gloria") spieler.push_back(Charakter::Gloria);
-        else if (input == "Gatow") spieler.push_back(Charakter::Gatow);
-        else if (input == "Porz") spieler.push_back(Charakter::Porz);
-        else if (input == "Grün") spieler.push_back(Charakter::Grün);
-        else if (input == "Weiß") spieler.push_back(Charakter::Weiß);
-        else if (input == "Bloom") spieler.push_back(Charakter::Bloom);
+        if (input == "Gloria") spieler.push_back(Charakter::CharT::Gloria);
+        else if (input == "Gatow") spieler.push_back(Charakter::CharT::Gatow);
+        else if (input == "Porz") spieler.push_back(Charakter::CharT::Porz);
+        else if (input == "Grün") spieler.push_back(Charakter::CharT::Grün);
+        else if (input == "Weiß") spieler.push_back(Charakter::CharT::Weiß);
+        else if (input == "Bloom") spieler.push_back(Charakter::CharT::Bloom);
         else if (input.empty()) break;
         else cout << "Falsche Eingabe!";
     }
     cout << endl;
 
     int spielerAnzahl = spieler.size();
-    std::vector<Position> positionen(spielerAnzahl);
+    std::vector<Position> positionen(Charakter::anzahl);
     int geradeDran;
     std::vector<bool> wurdeTeleportiert(spielerAnzahl);
     std::vector<bool> hatVerloren(spielerAnzahl);
@@ -346,14 +387,16 @@ int main()
     {
         karten.push_back(static_cast<Waffe>(i));
     }
-    std::array<Karte, 3>  akte;
-    for (int i = 0; i < 3; ++i)
-    {
-        std::uniform_int_distribution<> dist(0, karten.size() - 1);
-        int pos = dist(mt);
-        akte[i] = karten[pos];
-        karten.erase(karten.begin() + pos);
-    }
+    std::vector<Karte>  akte(3);
+    int pos = std::uniform_int_distribution<>(0, 8)(mt);
+    akte[0] = karten[pos];
+    karten.erase(karten.begin() + pos);
+    pos = std::uniform_int_distribution<>(8, 13)(mt);
+    akte[1] = karten[pos];
+    karten.erase(karten.begin() + pos);
+    pos = std::uniform_int_distribution<>(13, 18)(mt);
+    akte[2] = karten[pos];
+    karten.erase(karten.begin() + pos);
 
     while (karten.size() >= spielerAnzahl)
     {
@@ -365,6 +408,13 @@ int main()
             karten.erase(karten.begin() + pos);
         }
     }
+    if (! karten.empty())
+    {
+        cout << "Übrige Karten werden offengelegt:" << endl;
+        zeigeKarten(karten);
+        cout << endl;
+    }
+
     // Wer darf anfangen?
     std::uniform_int_distribution<> spieler_dist(1, spielerAnzahl);
     geradeDran = spieler_dist(mt);
@@ -372,7 +422,8 @@ int main()
 
     for (;; geradeDran = (geradeDran) % spielerAnzahl + 1)
     {
-        if (hatVerloren[geradeDran]) break; // Spieler darf nicht mehr ziehen oder fragen
+        if (hatVerloren[geradeDran - 1]) continue; // Spieler darf nicht mehr ziehen oder fragen
+        cout << "Spieler " << geradeDran << " (" << spieler[geradeDran - 1].zuStr() << ") ist dran." << endl;
         cout << "Deine Karten: ";
         zeigeKarten(spKarten[geradeDran - 1]);
         cout << endl;
@@ -384,9 +435,10 @@ int main()
         int wurf = würfel_dist(mt);
         cout << "Du hast eine " << wurf << " gewürfelt." << endl;
 
-        auto startPos = positionen[geradeDran - 1];
-        Position pos = startPos;
-        if (! wurdeTeleportiert[geradeDran - 1] || willNichtBleiben())
+        int spIndex = spieler[geradeDran - 1].zuZahl();
+        auto startPos = positionen[spIndex];
+        auto pos = startPos;
+        if (! wurdeTeleportiert[spIndex] || willNichtBleiben(pos.raum))
         {
             do
             {
@@ -414,138 +466,143 @@ int main()
                     {
                         opts.push_back("Links");
                     }
-                    pos.geheNach(frageOptionen(opts));
-                    posCh = brett[7 - std::get<1>(pos.feld)][std::get<0>(pos.feld) + 3];
+                    auto neuePos = pos;
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    neuePos.geheNach(frageOptionen(opts)); // FIXME: numerierung durcheinander
+                    posCh = brett[7 - std::get<1>(neuePos.feld)][std::get<0>(neuePos.feld) + 3];
                     if (islower(posCh))
                     {
-                        pos.typ = Position::PosTyp::Raum;
-                        pos.raum = Position::charZuRaum(posCh);
+                        if (startPos == Position(Raum(posCh)))
+                        {
+                            cout << "Du kannst nicht in denselben Raum wieder zurückgehen!" << endl;
+                            ++wurf; // diesen Zug nochmal versuchen
+                        }
+                        else
+                        {
+                            pos = Position(Raum(posCh));
+                        }
+                    }
+                    else
+                    {
+                        pos = neuePos;
                     }
                 }
                 else
                 {
-                    switch (pos.raum)
+                    cout << pos.raum.inStr() << "." << endl;
+                    switch (pos.raum.typ)
                     {
-                    case Raum::Schlaf:
-                        cout << "im Schlafzimmer. Optionen:" << endl;
+                    case Raum::RaumT::Schlaf:
+                        cout << "Optionen:" << endl;
                         switch (frageOptionen({
                                     "Geiheimgang zum Wohnzimmer",
                                     "Durchgang zum Badezimmer",
                                     "Ausgang zu Feld (-2,5)"}))
                         {
                         case 1:
-                            pos.raum = Raum::Wohn;
+                            pos = Position(Raum::RaumT::Wohn);
                             break;
                         case 2:
-                            pos.raum = Raum::Bade;
+                            pos = Position(Raum::RaumT::Bade);
                             break;
                         case 3:
-                            pos.typ = Position::PosTyp::Feld;
-                            pos.feld = std::make_tuple(-2, 5);
+                            pos = Position(std::make_tuple(-2, 5));
                             break;
                         }
                         break;
-                    case Raum::Bade:
-                        cout << "im Badezimmer. Optionen:" << endl;
+                    case Raum::RaumT::Bade:
+                        cout << "Optionen:" << endl;
                         switch (frageOptionen({
                                         "Durchgang zum Schlafzimmer",
                                         "Ausgang zu Feld (0,6)"}))
                         {
                         case 1:
-                            pos.raum = Raum::Schlaf;
+                            pos = Position(Raum::RaumT::Schlaf);
                             break;
                         case 2:
-                            pos.typ = Position::PosTyp::Feld;
-                            pos.feld = std::make_tuple(0, 6);
+                            pos = Position(std::make_tuple(0, 6));
                             break;
                         }
                         break;
-                    case Raum::Arbeits:
-                        cout << "im Arbeitszimmer. Du kannst nur durch den Ausgang auf Feld (1,6) gehen.";
-                        pos.typ = Position::PosTyp::Feld;
-                        pos.feld = std::make_tuple(1, 6);
+                    case Raum::RaumT::Arbeits:
+                        cout << "Du kannst nur durch den Ausgang auf Feld (1,6) gehen." << endl;
+                        pos = Position(std::make_tuple(1, 6));
                         break;
-                    case Raum::Küche:
-                        cout << "in der Küche. Optionen:" << endl;
+                    case Raum::RaumT::Küche:
+                        cout << "Optionen:" << endl;
                         switch (frageOptionen({
                                     "Durchgang zum Speisezimmer",
                                     "Ausgang zu Feld (5,4)"}))
                         {
                         case 1:
-                            pos.raum = Raum::Speise;
+                            pos = Position(Raum::RaumT::Speise);
                             break;
                         case 2:
-                            pos.typ = Position::PosTyp::Feld;
-                            pos.feld = std::make_tuple(5, 4);
+                            pos = Position(std::make_tuple(5, 4));
                             break;
                         }
                         break;
-                    case Raum::Speise:
+                    case Raum::RaumT::Speise:
                         cout << "im Speisezimmer. Optionen:" << endl;
                         switch (frageOptionen({
                                     "Durchgang zur Küche",
                                     "Ausgang zu Feld (4,0)"}))
                         {
                         case 1:
-                            pos.raum = Raum::Küche;
+                            pos = Position(Raum::RaumT::Küche);
                             break;
                         case 2:
-                            pos.typ = Position::PosTyp::Feld;
-                            pos.feld = std::make_tuple(4, 0);
+                            pos = Position(std::make_tuple(4, 0));
                         }
                         break;
-                    case Raum::Wohn:
-                        cout << "im Wohnzimmer. Optionen:" << endl;
+                    case Raum::RaumT::Wohn:
+                        cout << "Optionen:" << endl;
                         switch (frageOptionen({
                                     "Geheimgang zum Schlafzimmer",
                                     "Ausgang zu Feld (5,-4)"}))
                         {
                         case 1:
-                            pos.raum = Raum::Schlaf; break;
+                            pos = Position(Raum::RaumT::Schlaf);
+                            break;
                         case 2:
-                            pos.typ = Position::PosTyp::Feld;
-                            pos.feld = std::make_tuple(5, -4);
+                            pos = Position(std::make_tuple(5, -4));
                             break;
                         }
                         break;
-                    case Raum::Hof:
-                        cout << "im Hof. Optionen:" << endl;
-                        pos.typ = Position::PosTyp::Feld;
+                    case Raum::RaumT::Hof:
+                        cout << "Optionen:" << endl;
                         switch (frageOptionen({
                                     "Ausgang zu Feld (1,-6)",
                                     "Ausgang zu Feld (2,-6)"}))
                         {
                         case 1:
-                            pos.feld = std::make_tuple(1, -6);
+                            pos = Position(std::make_tuple(1, -6));
                             break;
                         case 2:
-                            pos.feld = std::make_tuple(2, -6);
+                            pos = Position(std::make_tuple(2, -6));
                             break;
                         }
                         break;
-                    case Raum::Garage:
-                        cout << "in der Garage. Optionen:";
+                    case Raum::RaumT::Garage:
+                        cout << "Optionen:";
                         switch (frageOptionen({
                                     "Geheimgang zur Küche",
                                     "Ausgang zu Feld (-2,-5)"}))
                         {
                         case 1:
-                            pos.raum = Raum::Küche;
+                            pos = Position(Raum::RaumT::Küche);
                             break;
                         case 2:
-                            pos.typ = Position::PosTyp::Feld;
-                            pos.feld = std::make_tuple(-2, -5);
+                            pos = Position(std::make_tuple(-2, -5));
                             break;
                         }
                         break;
-                    case Raum::Spiele:
-                        cout << "im Spieleraum. Du kannst nur durch den Ausgang auf Feld (-2,-1) gehen.";
-                        pos.typ = Position::PosTyp::Feld;
-                        pos.feld = std::make_tuple(-2, -1);
+                    case Raum::RaumT::Spiele:
+                        cout << "Du kannst nur durch den Ausgang auf Feld (-2,-1) gehen." << endl;
+                        pos = Position(std::make_tuple(-2, -1));
                         break;
-                    case Raum::Mitte:
-                        cout << "in der Mitte. Optionen:" << endl;
-                        pos.typ = Position::PosTyp::Feld;
+                    case Raum::RaumT::Mitte:
+                        cout << "Optionen:" << endl;
                         switch (frageOptionen({
                                     "Ausgang zu Feld (-1,-1)",
                                     "Ausgang zu Feld (2,1)",
@@ -553,57 +610,107 @@ int main()
                                     "Ausgang zu Feld (2,-3)"}))
                         {
                         case 1:
-                            pos.feld = std::make_tuple(-1, -1);
+                            pos = Position(std::make_tuple(-1, -1));
                             break;
                         case 2:
-                            pos.feld = std::make_tuple(2, 1);
+                            pos = Position(std::make_tuple(2, 1));
                             break;
                         case 3:
-                            pos.feld = std::make_tuple(4, -1);
+                            pos = Position(std::make_tuple(4, -1));
                             break;
                         case 4:
-                            pos.feld = std::make_tuple(2, -3);
+                            pos = Position(std::make_tuple(2, -3));
                             break;
                         }
                         break;
                     }
                 }
-            } while (pos.typ != Position::PosTyp::Raum && --wurf != 0);
-            positionen[geradeDran] = pos;
+            }
+            while (pos.typ != Position::PosTyp::Raum && --wurf != 0);
+            positionen[spIndex] = pos;
 
             if (pos.typ == Position::PosTyp::Raum)
             {
-                cout << "Du hast ";
-                switch (pos.raum)
-                {
-                case Raum::Schlaf:
-                    cout << "das Schlafzimmer"; break;
-                case Raum::Bade:
-                    cout << "das Badezimmer"; break;
-                case Raum::Arbeits:
-                    cout << "das Arbeitszimmer"; break;
-                case Raum::Küche:
-                    cout << "die Küche"; break;
-                case Raum::Speise:
-                    cout << "das Speisezimmer"; break;
-                case Raum::Wohn:
-                    cout << "das Wohnzimmer"; break;
-                case Raum::Hof:
-                    cout << "den Hof"; break;
-                case Raum::Garage:
-                    cout << "die Garage"; break;
-                case Raum::Spiele:
-                    cout << "den Spieleraum"; break;
-                case Raum::Mitte:
-                    cout << "die Mitte"; break;
-                }
-                cout << " erreicht!" << endl;
+                cout << "Du hast " << pos.raum.akkusStr() << " erreicht!" << endl;
             }
         }
 
         if (pos.typ != Position::PosTyp::Raum) continue; // hat keinen Raum erreicht
+        if (pos.raum.typ == Raum::RaumT::Mitte)
+        {
+            cout << "Gegen wen möchtest du Anklage ergeheben?" << endl;
+            int ch = frageOptionen(charPZuStrVec(Charakter::strings, Charakter::anzahl)) - 1;
+            cout << "Was war die Tatwaffe?" << endl;
+            int waf = frageOptionen(charPZuStrVec(Waffe::strings, Waffe::anzahl)) - 1;
+            cout << "Wo geschah die Tat?" << endl;
+            int ort = frageOptionen(charPZuStrVec(Raum::strings, Raum::anzahl - 1)) - 1;
+            if (akte[0] == Karte(Raum(ort)) && akte[1] == Karte(Charakter(ch))
+                && akte[1] == Karte(Waffe(waf)))
+            {
+                cout << "Glückwunsch! Du hast gewonnen! :-)" << endl;
+                break;
+            }
+            else
+            {
+                cout << "Das war leider falsch :-( Die Akte ist" << endl;
+                zeigeKarten(akte);
+                cout << endl;
+                hatVerloren[geradeDran - 1] = true;
+                if (std::all_of(std::begin(hatVerloren), std::end(hatVerloren), [](bool i) { return i; }))
+                {
+                    cout << "Alle haben verloren..." << endl;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            cout << "Nach welchem Charakter möchtest du fragen?" << endl;
+            int ch = frageOptionen(charPZuStrVec(Charakter::strings, Charakter::anzahl)) - 1;
+            cout << "Nach welcher Waffe möchtest du fragen?" << endl;
+            int waf = frageOptionen(charPZuStrVec(Waffe::strings, Waffe::anzahl)) - 1;
+            cout << "Spieler " << geradeDran << " fragt: War es " << Charakter::strings[ch]
+                << " mit " << Waffe(waf).mitStr() << " " << pos.raum.inStr() << "?" << endl;
 
+            positionen[ch] = pos;
+            wurdeTeleportiert[ch] = true;
 
+            for (int i = geradeDran % spielerAnzahl;; i = (i + 1) % spielerAnzahl)
+            {
+                std::vector<std::string> kandidaten;
+                cout << "Spieler " << i + 1 << " (" << spieler[i].zuStr() << ") ist gefragt." << endl;
+                if (std::find(spKarten[i].begin(), spKarten[i].end(), Karte(Waffe(waf))) != spKarten[i].end())
+                {
+                    kandidaten.push_back(Waffe(waf).zuStr());
+                }
+                if (std::find(spKarten[i].begin(), spKarten[i].end(), Karte(Charakter(ch))) != spKarten[i].end())
+                {
+                    kandidaten.push_back(Charakter(ch).zuStr());
+                }
+                if (std::find(spKarten[i].begin(), spKarten[i].end(), Karte(pos.raum)) != spKarten[i].end())
+                {
+                    kandidaten.push_back(pos.raum.zuStr());
+                }
+
+                if (kandidaten.empty())
+                {
+                    cout << "Spieler " << i + 1 << " weiß nichts." << endl;
+                    if (i == (geradeDran - 1) % spielerAnzahl)
+                    {
+                        cout << "Keiner wusste was!" << endl;
+                        break;
+                    }
+                }
+                else
+                {
+                    cout << "Spieler " << i + 1 << " weiß was. Welche Karte möchte er zeigen?" << endl;
+                    int wahl = frageOptionen(kandidaten);
+                    cout << "Spieler " << i + 1 << " zeigt Spieler " << geradeDran << " die Karte \"" << kandidaten[wahl - 1] << "\"." << endl;
+                    break;
+                }
+            }
+        }
+        cout << endl;
+        wurdeTeleportiert[spIndex] = false;
     }
-    wurdeTeleportiert[geradeDran - 1] = false;
 }
